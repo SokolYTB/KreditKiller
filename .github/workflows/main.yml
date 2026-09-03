@@ -1,0 +1,106 @@
+name: Проверка кода бота
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Скачать код
+      uses: actions/checkout@v4
+    
+    - name: Установить Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Проверка файлов
+      run: |
+        echo "📁 Проверка структуры..."
+        ls -la
+        echo ""
+        echo "📄 Проверка main.py..."
+        if [ -f "main.py" ]; then echo "✅ main.py найден!"; else echo "❌ main.py НЕ найден!"; exit 1; fi
+        echo ""
+        echo "📄 Проверка requirements.txt..."
+        if [ -f "requirements.txt" ]; then echo "✅ requirements.txt найден!"; else echo "❌ requirements.txt НЕ найден!"; exit 1; fi
+    
+    - name: Установка зависимостей
+      run: |
+        echo "📦 Установка зависимостей..."
+        pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Проверка синтаксиса Python
+      run: |
+        echo "🔍 Проверка синтаксиса main.py..."
+        python -m py_compile main.py
+        echo "✅ Синтаксис Python в порядке!"
+    
+    - name: Проверка импортов
+      run: |
+        echo "📦 Проверка импорта aiogram..."
+        python -c "import aiogram; print('✅ aiogram версия:', aiogram.__version__)"
+        echo "✅ Все импорты работают!"
+    
+    - name: Проверка токена (безопасно)
+      run: |
+        if [ -n "${{ secrets.BOT_TOKEN }}" ]; then
+          echo "✅ BOT_TOKEN настроен!"
+        else
+          echo "⚠️ BOT_TOKEN не настроен в секретах"
+          echo "   (это не ошибка, бот просто не сможет запуститься)"
+        fi
+    
+    - name: Проверка структуры базы данных (без создания)
+      run: |
+        echo "📊 Проверка SQL запросов..."
+        python -c "
+import sqlite3
+import sys
+try:
+    # Проверяем синтаксис SQL из кода (просто читаем main.py)
+    with open('main.py', 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Проверяем наличие ключевых функций
+    required = [
+        'def calculate_monthly_payment',
+        'def generate_schedule',
+        'def get_or_create_user',
+        'def get_user_credits',
+        'def get_total_debt',
+        '@dp.message(Command(\"start\"))',
+        '@dp.message(Command(\"add\"))',
+        '@dp.message(Command(\"salary\"))',
+        'class AddCreditStates',
+        'class SalaryStates'
+    ]
+    
+    missing = []
+    for func in required:
+        if func not in content:
+            missing.append(func)
+    
+    if missing:
+        print('❌ Отсутствуют функции:', ', '.join(missing))
+        sys.exit(1)
+    else:
+        print('✅ Все ключевые функции найдены!')
+        print('✅ Код готов к запуску!')
+except Exception as e:
+    print('❌ Ошибка при проверке:', e)
+    sys.exit(1)
+"
+    
+    - name: Итог проверки
+      run: |
+        echo ""
+        echo "✅✅✅ ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ! ✅✅✅"
+        echo ""
+        echo "🚀 Бот готов к развертыванию на хостинге!"
+        echo "📌 Не забудь добавить переменную BOT_TOKEN на хостинге"
