@@ -216,3 +216,40 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ===== МОЙ БОТ =====
+# База данных (важно!)
+*.db
+*.sqlite
+*.sqlite3
+credit_planner.db
+
+# Токены и секреты (важно!)
+.env
+.env.local
+config.py
+bot_token.txt
+secrets.py
+
+# Логи
+*.log
+logs/
+
+# Временные файлы
+temp/
+tmp/
+*.tmp
+
+# Бэкапы
+*.bak
+*.backup
+
+# Файлы IDE (если не хочешь заливать)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Файлы проекта (папки)
+data/
+sessions/
